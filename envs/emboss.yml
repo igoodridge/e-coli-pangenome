@@ -1,6 +1,6 @@
 name: emboss
 channels: 
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
   - bioconda::emboss=6.6.0

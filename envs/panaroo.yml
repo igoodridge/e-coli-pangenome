@@ -1,6 +1,6 @@
 name: panaroo
 channels: 
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies: 
   - bioconda::panaroo=1.8.0

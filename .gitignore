@@ -1,0 +1,21 @@
+# Data
+data/
+results/
+
+# Write up
+write_up/ 
+
+# Nextflow
+work/
+.nextflow/
+.nextflow.log*
+
+# Caches
+__pycache__/
+
+# Tests
+results_test/
+
+# EggNOG Database
+databases/
+

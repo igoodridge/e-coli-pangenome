@@ -1,0 +1,19 @@
+# Genome picking (bin/pick_genomes.py)
+# In each COG set, picks the genomes whose closest pair is as far apart as possible.
+# Changing this file only reruns the picking and plots, not the distances.
+
+# COG sets (from conf/cog_sets.yml) to pick in; each set gets its own picks. [] = all of them
+sets: [motility_extracellular_secretion_envelope]
+
+# Genome always included: picks it + the 3 others that maximise the smallest distance among all 4.
+# null = pick the 3 most distant genomes
+fixed: K-12
+
+# Genomes with fewer genes than this in a set can't be picked from it
+min_genes: 10
+
+# Genome IDs never to pick
+exclude: []
+
+# One pick from each of these phylogroups, e.g. [A, B2, D] (the fixed genome is not counted); null = any
+phylogroups: null

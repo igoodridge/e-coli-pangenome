@@ -15,3 +15,6 @@ skani:
   species: Escherichia coli   # must appear in the top hit's name
   min_species_ani: 95         # top hit ANI
   min_species_af: 60          # top hit align fraction (query and ref)
+
+extra_genomes:
+  always_keep: true           # keep extra genomes (e.g. K-12) even if they fail a rule; false = filter them like the rest

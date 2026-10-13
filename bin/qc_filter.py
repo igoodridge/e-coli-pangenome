@@ -20,16 +20,22 @@ def genome_id(path):
 
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--seqkit", required=True, help="seqkit stats -a -T output")
-    p.add_argument("--checkm2", required=True, help="CheckM2 quality_report.tsv")
-    p.add_argument("--skani", required=True, help="skani search output vs species database")
+    p.add_argument("--seqkit", required=True, nargs="+", help="seqkit stats -a -T output(s)")
+    p.add_argument("--checkm2", required=True, nargs="+", help="CheckM2 quality_report.tsv(s)")
+    p.add_argument("--skani", required=True, nargs="+", help="skani search output(s) vs species database")
+    p.add_argument("--extra", nargs="*", default=[], help="IDs of extra genomes (e.g. K-12)")
 
     p.add_argument("--config", required=True, help="QC thresholds YAML (see conf/qc.yml)")
     return p.parse_args()
 
 
-def skani_top_hits(path, min_af):
-    skani = pd.read_csv(path, sep="\t").assign(genome_id=lambda d: d["Query_file"].map(genome_id))
+def read_reports(paths):
+    # A report per tool, plus one for extra genomes when existing reports are reused
+    return pd.concat([pd.read_csv(p, sep="\t") for p in paths if Path(p).stat().st_size > 0], ignore_index=True)
+
+
+def skani_top_hits(paths, min_af):
+    skani = read_reports(paths).assign(genome_id=lambda d: d["Query_file"].map(genome_id))
     hits = skani[(skani["Align_fraction_query"] >= min_af) & (skani["Align_fraction_ref"] >= min_af)]
     return (
         hits.sort_values("ANI", ascending=False)
@@ -46,10 +52,10 @@ def main():
     with open(args.config) as fh:
         cfg = yaml.safe_load(fh)
 
-    seqkit = (pd.read_csv(args.seqkit, sep="\t")
+    seqkit = (read_reports(args.seqkit)
               .assign(genome_id=lambda d: d["file"].map(genome_id))
               .set_index("genome_id")[["file", "num_seqs", "sum_len", "N50", "GC(%)"]])
-    checkm2 = (pd.read_csv(args.checkm2, sep="\t")
+    checkm2 = (read_reports(args.checkm2)
                .assign(genome_id=lambda d: d["Name"].map(genome_id))
                .set_index("genome_id")[["Completeness", "Contamination"]])
     skani = skani_top_hits(args.skani, cfg["skani"]["min_af"])
@@ -79,7 +85,13 @@ def main():
     }
     fails = pd.DataFrame(rules)
     report["fail_reasons"] = fails.apply(lambda r: ";".join(fails.columns[r]), axis=1)
+    report["extra_genome"] = report.index.isin(args.extra)
     report["qc_pass"] = report["fail_reasons"] == ""
+    if cfg["extra_genomes"]["always_keep"]:
+        report.loc[report["extra_genome"], "qc_pass"] = True
+    for gid, reasons in report.loc[report["extra_genome"] & (report["fail_reasons"] != ""), "fail_reasons"].items():
+        kept = "kept anyway" if cfg["extra_genomes"]["always_keep"] else "excluded"
+        print(f"extra genome {gid} fails {reasons}: {kept}")
 
     report.to_csv("qc_report.tsv", sep="\t")
     passed = report[report["qc_pass"]].drop(columns=["qc_pass", "fail_reasons"])

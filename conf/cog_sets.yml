@@ -1,0 +1,19 @@
+# Gene sets for genome distances (bin/genome_distances.py)
+# A gene is in a set if any of its COG category letters is listed. "all" = every gene.
+# Changing this file recalculates the distances.
+
+all_genes: all
+motility_extracellular_secretion_envelope: [N, W, U, M]
+motility_extracellular_secretion_envelope_defense: [N, W, U, M, V]
+motility_extracellular_envelope_defense: [N, W, M, V]
+motility_extracellular_secretion: [N, W, U]
+envelope: [M]
+energy_production: [C]
+translation_ribosomal_structure_biogenesis: [J]
+transcription: [K]
+defense: [V]
+replication_recombination_repair: [L]
+inorganic_ion_transport: [P]
+metabolism: [C, G, E, F, H, I, P, Q]
+cellular_processes_signalling: [D, Y, V, T, M, N, Z, W, U, O]
+information_storage_processing: [J, A, K, L, B]

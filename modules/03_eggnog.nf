@@ -32,7 +32,8 @@ process EGGNOG {
     val db_version
 
     output:
-    path 'eggnog_pangenome.emapper.*', emit: annotations
+    path 'eggnog_pangenome.emapper.*',           emit: annotations
+    path 'eggnog_pangenome.emapper.annotations', emit: table
     tuple val("${task.process}"), val('eggnog-mapper'), eval('emapper.py --version 2>&1 | grep -o "emapper-[^ ]*" | sed -E "s/emapper-//; s/-[0-9a-f]{7}\$//"'), topic: versions
     tuple val("${task.process}"), val('eggnog-db'), val(db_version), topic: versions
 

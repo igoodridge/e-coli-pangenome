@@ -115,10 +115,11 @@ process SKANI_SEARCH {
 
 process QC_FILTER {
     input:
-    path seqkit
-    path checkm2
-    path skani
+    path seqkit, stageAs: 'seqkit/?/*'     // one or more reports per tool
+    path checkm2, stageAs: 'checkm2/?/*'
+    path skani, stageAs: 'skani/?/*'
     path config
+    val extra_ids                          // extra genome IDs (e.g. K-12)
 
     output:
     path 'qc_passed.tsv', emit: passed
@@ -128,19 +129,36 @@ process QC_FILTER {
     script:
     """
     qc_filter.py \\
-        --seqkit ${seqkit} \\
-        --checkm2 ${checkm2} \\
-        --skani ${skani} \\
-        --config ${config}
+        --seqkit seqkit/*/* \\
+        --checkm2 checkm2/*/* \\
+        --skani skani/*/* \\
+        --config ${config} \\
+        --extra ${extra_ids.join(' ')}
     """
 
     stub:
-    // Real filter if the reports are real (it only takes seconds), otherwise pass every genome in the seqkit report
+    // Real filter if the reports are real (it only takes seconds), otherwise pass every genome in the seqkit reports
     """
-    if [ -s ${seqkit} ] && [ -s ${checkm2} ] && [ -s ${skani} ]; then
-        qc_filter.py --seqkit ${seqkit} --checkm2 ${checkm2} --skani ${skani} --config ${config}
+    if [ -s "\$(ls checkm2/*/* | head -1)" ] && [ -s "\$(ls skani/*/* | head -1)" ]; then
+        qc_filter.py --seqkit seqkit/*/* --checkm2 checkm2/*/* --skani skani/*/* --config ${config} --extra ${extra_ids.join(' ')}
     else
-        (echo genome_id; tail -n +2 ${seqkit} | xargs -n1 basename | sed 's/\\.fasta\\.gz\$//') | tee qc_passed.tsv > qc_report.tsv
+        (echo genome_id; tail -q -n +2 seqkit/*/* | xargs -n1 basename | sed 's/\\.fasta\\.gz\$//') | tee qc_passed.tsv > qc_report.tsv
     fi
+    """
+}
+
+process PREPARE_GENOME {
+    tag "${id}"
+
+    input:
+    tuple val(id), path(fasta, stageAs: 'input/*')
+
+    output:
+    path "${id}.fasta.gz"
+
+    script:
+    // Named after its genome ID and gzipped like the assemblies, so every step sees the same ID
+    """
+    gzip -cdf ${fasta} | gzip > ${id}.fasta.gz
     """
 }

@@ -1,0 +1,9 @@
+name: analysis
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pandas=2.3.3
+  - numpy
+  - pyyaml
+  - matplotlib

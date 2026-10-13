@@ -35,6 +35,9 @@ params {
     eggnog_db_version: String = '7.0.0'
     eggnog_db_url: String = 'https://data.cgmlab.org/eggnog-mapper/emapper-3.0/data'
 
+    // Existing Prokka output (<prokka_dir>/<id>/<id>.gff): genomes found there aren't re-annotated
+    prokka_dir: Path?
+
     // NCBI COG definitions, used to describe eggNOG's COG IDs
     cog_defs: Path = "${projectDir}/assets/cog-20.def.tab"
 
@@ -61,8 +64,14 @@ workflow {
 
     QC(raw_assemblies, PREPARE_GENOME.out, params)
 
-    ANNOTATE(QC.out.assemblies)
-    PANGENOME(ANNOTATE.out.gff.collect())
+    // Reuse existing Prokka annotations where there are any; annotate the rest
+    to_annotate = QC.out.assemblies.branch { id, _assembly ->
+        existing: params.prokka_dir && params.prokka_dir.resolve("${id}/${id}.gff").exists()
+        missing: true
+    }
+    existing_gffs = to_annotate.existing.map { id, _assembly -> params.prokka_dir.resolve("${id}/${id}.gff") }
+    ANNOTATE(to_annotate.missing)
+    PANGENOME(ANNOTATE.out.gff.mix(existing_gffs).collect())
 
     eggnog_db = params.eggnog_db
         ? channel.value(params.eggnog_db)

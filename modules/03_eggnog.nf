@@ -27,20 +27,23 @@ process DOWNLOAD_EGGNOG_DB {
 
 process EGGNOG {
     input:
-    path faa
+    path cds
     path db
     val db_version
 
     output:
     path 'eggnog_pangenome.emapper.*', emit: annotations
-    tuple val("${task.process}"), val('eggnog-mapper'), eval('emapper.py --version 2>&1 | grep -o "emapper-[^ ]*" | sed "s/emapper-//"'), topic: versions
+    tuple val("${task.process}"), val('eggnog-mapper'), eval('emapper.py --version 2>&1 | grep -o "emapper-[^ ]*" | sed -E "s/emapper-//; s/-[0-9a-f]{7}\$//"'), topic: versions
     tuple val("${task.process}"), val('eggnog-db'), val(db_version), topic: versions
 
     script:
+    // --itype CDS: emapper translates the Panaroo reference (frame 1, bacterial code) before the DIAMOND search
     """
     check_eggnog_db.py ${db} ${db_version}
     emapper.py \\
-        -i ${faa} \\
+        -i ${cds} \\
+        --itype CDS \\
+        --trans_table 11 \\
         --output eggnog_pangenome \\
         --data_dir ${db} \\
         -m diamond \\

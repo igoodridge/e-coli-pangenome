@@ -1,8 +1,7 @@
 include { QC; genomeId               } from './subworkflows/qc'
 include { ANNOTATE                   } from './modules/01_annotate'
 include { PANGENOME                  } from './modules/02_pangenome'
-include { TRANSLATE                  } from './modules/03_translate'
-include { DOWNLOAD_EGGNOG_DB; EGGNOG } from './modules/04_eggnog'
+include { DOWNLOAD_EGGNOG_DB; EGGNOG } from './modules/03_eggnog'
 
 params {
     // Directory of genome assemblies (*.fasta.gz)
@@ -49,12 +48,11 @@ workflow {
 
     ANNOTATE(QC.out.assemblies.mix(extra_genomes))
     PANGENOME(ANNOTATE.out.gff.collect())
-    TRANSLATE(PANGENOME.out.ref)
 
     eggnog_db = params.eggnog_db
         ? channel.value(params.eggnog_db)
         : DOWNLOAD_EGGNOG_DB(params.eggnog_db_url, params.eggnog_db_version, params.db_cache)
-    EGGNOG(TRANSLATE.out.faa, eggnog_db, params.eggnog_db_version)
+    EGGNOG(PANGENOME.out.ref, eggnog_db, params.eggnog_db_version)
 
     versions = channel.topic('versions')
         .unique()
@@ -66,7 +64,6 @@ workflow {
     qc_reports = QC.out.reports
     annotation = ANNOTATE.out.dir
     pangenome  = PANGENOME.out.dir
-    proteins   = TRANSLATE.out.faa
     eggnog     = EGGNOG.out.annotations
     versions   = versions
 }
@@ -76,7 +73,6 @@ output {
     qc_reports { path 'qc/reports' }
     annotation { path 'prokka' }
     pangenome  { path '.' }
-    proteins   { path 'panaroo' }
     eggnog     { path 'eggnog' }
     versions   { path 'pipeline_info' }
 }

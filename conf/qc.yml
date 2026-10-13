@@ -1,0 +1,17 @@
+# QC thresholds used by bin/qc_filter.py
+# Defaults reproduce the original notebook (notebooks/02_qc.ipynb)
+
+seqkit:
+  min_length: 4000000         # bp
+  max_length: 6000000         # bp
+  min_n50: 50000              # bp
+
+checkm2:
+  min_completeness: 0         # %, 0 = no filter
+  max_contamination: 100      # %, 100 = no filter
+
+skani:
+  min_af: 15                  # drop hits below this align fraction (query and ref) before picking the top hit
+  species: Escherichia coli   # must appear in the top hit's name
+  min_species_ani: 95         # top hit ANI
+  min_species_af: 60          # top hit align fraction (query and ref)

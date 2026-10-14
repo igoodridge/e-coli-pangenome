@@ -63,9 +63,11 @@ def main():
     present = presence[genomes].notna()
     genes = presence[PANAROO_META].assign(
         n_genomes=present.sum(axis=1),
-        frequency=present.mean(axis=1).round(4),
+        frequency=present.mean(axis=1),
     )
+    # Categorise before rounding: e.g. 428/2854 = 0.14996 is cloud, but rounds to 0.15 (shell)
     genes["pangenome_category"] = genes["frequency"].map(pangenome_category)
+    genes["frequency"] = genes["frequency"].round(4)
     genes = genes.merge(annotation, on="Gene", how="left", validate="one_to_one")
     genes.to_csv("gene_annotations.tsv", sep="\t", index=False)
 

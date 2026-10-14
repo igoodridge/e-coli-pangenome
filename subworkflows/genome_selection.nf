@@ -21,6 +21,6 @@ workflow GENOME_SELECTION {
     emit:
     distances = GENOME_DISTANCES.out.distances
     picks     = PICK_GENOMES.out.picks
-    plots     = PLOT_PCOA.out.plots
+    plots     = PLOT_PCOA.out.plots.mix(PLOT_PCOA.out.plots_supp)
     summary   = SUMMARISE_PICKS.out.summary
 }

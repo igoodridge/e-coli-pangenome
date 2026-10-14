@@ -53,6 +53,7 @@ process PLOT_PCOA {
 
     output:
     path 'plots', emit: plots
+    path 'plots_supp', emit: plots_supp   // variance explained per component, for the supplementary
 
     script:
     def pg = phylogroups ? "--phylogroups ${phylogroups}" : ''
@@ -63,7 +64,7 @@ process PLOT_PCOA {
 
     stub:
     """
-    mkdir plots
+    mkdir plots plots_supp
     """
 }
 

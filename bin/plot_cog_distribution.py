@@ -3,7 +3,7 @@
 Panaroo core + soft core) and accessory, from the pipeline's gene_annotations.tsv.
 
 A cluster with several category letters counts once in each of its categories. The poorly
-characterised categories (R, S) are left out.
+characterised categories (R, S) are left out. Categories are sorted by total clusters, largest first.
 """
 import argparse
 
@@ -63,6 +63,8 @@ def main():
                 rows.append({"group": group, "label": f"{letter}  {name}",
                              "core": (has & core).sum(), "accessory": (has & ~core).sum()})
     counts = pd.DataFrame(rows)
+    counts["total"] = counts["core"] + counts["accessory"]
+    counts = counts.sort_values("total", ascending=False).reset_index(drop=True)
 
     fig, ax = plt.subplots(figsize=(8, 7.5), facecolor=SURFACE)
     y = range(len(counts))[::-1]   # first category at the top
@@ -70,14 +72,10 @@ def main():
             edgecolor=SURFACE, linewidth=1)
     ax.barh(y, counts["accessory"], left=counts["core"], color=ACCESSORY, height=0.7,
             edgecolor=SURFACE, linewidth=1)
-    for yi, total in zip(y, counts["core"] + counts["accessory"]):
+    for yi, total in zip(y, counts["total"]):
         ax.text(total + 60, yi, f"{total:,}", va="center", fontsize=8, color=INK_SECONDARY)
 
     ax.set_yticks(list(y), counts["label"], fontsize=8, color=INK)
-    # Separate the broad groups with a faint line
-    bounds = counts.index[counts["group"] != counts["group"].shift()][1:]
-    for b in bounds:
-        ax.axhline(len(counts) - b - 0.5, color=GRID, linewidth=1)
 
     ax.set_xlabel("Gene clusters", fontsize=9, color=INK_SECONDARY)
     ax.tick_params(axis="x", labelsize=8, colors=INK_SECONDARY)
@@ -85,11 +83,11 @@ def main():
     for side in ["top", "right", "left"]:
         ax.spines[side].set_visible(False)
     ax.spines["bottom"].set_color(GRID)
-    ax.set_xlim(0, (counts["core"] + counts["accessory"]).max() * 1.12)
+    ax.set_xlim(0, counts["total"].max() * 1.12)
     ax.margins(y=0.01)
     handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (CORE, ACCESSORY)]
     ax.legend(handles, ["Core (≥ 95% of genomes)", "Accessory (< 95% of genomes)"],
-              frameon=False, fontsize=8, labelcolor=INK_SECONDARY, loc="upper right")
+              frameon=False, fontsize=8, labelcolor=INK_SECONDARY, loc="lower right")
 
     fig.tight_layout()
     fig.savefig(args.out, dpi=200, facecolor=SURFACE)

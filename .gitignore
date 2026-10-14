@@ -19,3 +19,5 @@ results_test/
 # EggNOG Database
 databases/
 
+# Other
+.vscode/

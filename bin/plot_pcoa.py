@@ -135,7 +135,7 @@ def plot_set(coords, variance, picks=None, pg=None):
 
 def plot_variance(variance):
     """Bar chart of the variance explained per component; PCo1 and PCo2 (the scatter's axes) are labelled."""
-    fig, ax = plt.subplots(figsize=(7, 4.5), facecolor=SURFACE)
+    fig, ax = plt.subplots(figsize=(4, 2.8), facecolor=SURFACE)
     explained = variance.set_index("component")["explained"]
     ax.bar(explained.index, explained.values * 100, color=BAR, width=0.7)
     for i, comp in enumerate(["PCo1", "PCo2"]):

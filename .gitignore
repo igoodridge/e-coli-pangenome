@@ -2,8 +2,10 @@
 data/
 results/
 
-# Write up
-write_up/ 
+# Write up (sources; only the built PDF in the repo root is tracked)
+write_up/
+ecoli_cryoet_strain_selection_writeup.fls
+ecoli_cryoet_strain_selection_writeup.synctex.gz
 
 # Nextflow
 work/
